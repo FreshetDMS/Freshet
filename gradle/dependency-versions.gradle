@@ -1,0 +1,8 @@
+ext {
+  samzaVersion = "0.12.0"
+  logbackVersion = "1.2.3"
+  sparkJavaVersion = "2.6.0"
+  hsqldbVersion = "2.4.0"
+  junitVersion = "4.12"
+  guavaVersion = "22.0"
+}
