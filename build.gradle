@@ -19,6 +19,8 @@ project(':freshet-core') {
     compile "org.apache.samza:samza-kv_2.11:$samzaVersion"
     compile "org.apache.samza:samza-kv-rocksdb_2.11:$samzaVersion"
     compile "com.google.guava:guava:$guavaVersion"
+    compile "guru.nidi:graphviz-java:$javaGraphVizVersion"
+    compile "org.graphstream:gs-core:$graphstreamVersion"
     testCompile "junit:junit:$junitVersion"
   }
 }

@@ -15,6 +15,8 @@
  */
 package org.pathirage.freshet;
 
+import org.pathirage.freshet.api.Visitor;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,5 +56,13 @@ public class Node {
 
   public List<Node> getInputs() {
     return inputs;
+  }
+
+  public void childrenAccept(Visitor visitor) {
+    int i = 0;
+    for (Node input : inputs) {
+      visitor.visit(input, i, this);
+      i++;
+    }
   }
 }

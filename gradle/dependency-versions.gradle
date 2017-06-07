@@ -5,4 +5,6 @@ ext {
   hsqldbVersion = "2.4.0"
   junitVersion = "4.12"
   guavaVersion = "22.0"
+  javaGraphVizVersion = "0.1.6"
+  graphstreamVersion = "1.3"
 }

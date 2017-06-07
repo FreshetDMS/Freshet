@@ -15,22 +15,37 @@
  */
 package org.pathirage.freshet;
 
+import org.apache.samza.job.StreamJobFactory;
+
 import java.util.List;
 import java.util.Map;
 
-public class Topology {
-  private final Map<String, Node> nodes;
-  private final List<String> sources;
-  private final List<String> sinks;
+public abstract class Topology {
+  protected final Map<String, Node> nodes;
+  protected final List<String> sources;
+  protected final List<String> sinks;
+  protected final Class<? extends StreamJobFactory> jobFactoryClass;
 
-  public Topology(Map<String, Node> nodes, List<String> sources, List<String> sinks) {
+  protected Topology(Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
     this.nodes = nodes;
     this.sources = sources;
     this.sinks = sinks;
+    this.jobFactoryClass = jobFactoryClass;
   }
 
-  public void run() {
-    // Get the sink
-    // Do a depth traversal and come backwards while deploying all the necessary samza jobs
+  public abstract void run();
+
+  public abstract void visualize(String outputPath);
+
+  public Map<String, Node> getNodes() {
+    return nodes;
+  }
+
+  public List<String> getSources() {
+    return sources;
+  }
+
+  public List<String> getSinks() {
+    return sinks;
   }
 }

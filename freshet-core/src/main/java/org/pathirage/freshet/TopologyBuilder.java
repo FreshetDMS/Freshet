@@ -15,6 +15,7 @@
  */
 package org.pathirage.freshet;
 
+import org.apache.samza.job.StreamJobFactory;
 import org.pathirage.freshet.api.Operator;
 
 import java.util.ArrayList;
@@ -27,6 +28,11 @@ public class TopologyBuilder {
   private final Map<String, Node> nodes = new HashMap<>();
   private final List<String> sources = new ArrayList<>();
   private final List<String> sinks = new ArrayList<>();
+  private final Class<? extends StreamJobFactory> jobFactoryClass;
+
+  public TopologyBuilder(Class<? extends StreamJobFactory> jobFactoryClass) {
+    this.jobFactoryClass = jobFactoryClass;
+  }
 
   public TopologyBuilder addSource(String id, PartitionedStream stream) {
     if (nodes.containsKey(id)) {
@@ -79,6 +85,6 @@ public class TopologyBuilder {
   }
 
   public Topology build() {
-    return new Topology(nodes, sources, sinks);
+    return new DryRunTopology(nodes, sources, sinks, jobFactoryClass);
   }
 }
