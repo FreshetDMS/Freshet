@@ -62,6 +62,7 @@ dependencies {
   compile "io.ebean:ebean-querybean:$ebeanVersion"
   compile "io.ebean:ebean:$ebeanVersion"
   compile "org.hsqldb:hsqldb:$hsqldbVersion"
+  compile "mysql:mysql-connector-java:$mysqlVersion"
   testCompile "junit:junit:$junitVersion"
 }
 

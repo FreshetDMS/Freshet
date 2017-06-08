@@ -13,4 +13,5 @@ ext {
   ebeanAnnotationVersion = "2.3"
   ebeanPersistenceAPIVersion = "2.2.1"
   neo4jVersion = "3.1.5"
+  mysqlVersion = "6.0.6"
 }
