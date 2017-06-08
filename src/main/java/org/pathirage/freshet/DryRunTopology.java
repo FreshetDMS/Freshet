@@ -26,8 +26,8 @@ import java.util.Map;
 
 public class DryRunTopology extends Topology {
 
-  public DryRunTopology(Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
-    super(nodes, sources, sinks, jobFactoryClass);
+  public DryRunTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
+    super(name, nodes, sources, sinks, jobFactoryClass);
   }
 
   @Override
@@ -83,7 +83,7 @@ public class DryRunTopology extends Topology {
       }
     }
 
-    public DefaultGraph getGraph(){
+    public DefaultGraph getGraph() {
       return g;
     }
   }

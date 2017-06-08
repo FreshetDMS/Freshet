@@ -1,37 +1,75 @@
-allprojects {
+group 'org.pathirage'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'ebean'
+
+sourceCompatibility = 1.8
+
+
+buildscript {
   repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
   }
-  apply plugin: 'idea'
-  apply plugin: 'java'
+
+  dependencies {
+    classpath "io.ebean:ebean-gradle-plugin:10.2.1"
+  }
 }
 
 apply from: file("gradle/dependency-versions.gradle")
 
-
-project(':freshet-core') {
-  dependencies {
-    compile "ch.qos.logback:logback-classic:$logbackVersion"
-    compile "org.apache.samza:samza-api:$samzaVersion"
-    compile "org.apache.samza:samza-core_2.11:$samzaVersion"
-    compile "org.apache.samza:samza-kafka_2.11:$samzaVersion"
-    compile "org.apache.samza:samza-kv_2.11:$samzaVersion"
-    compile "org.apache.samza:samza-kv-rocksdb_2.11:$samzaVersion"
-    compile "com.google.guava:guava:$guavaVersion"
-    compile "guru.nidi:graphviz-java:$javaGraphVizVersion"
-    compile "org.graphstream:gs-core:$graphstreamVersion"
-    testCompile "junit:junit:$junitVersion"
+idea {
+  module {
+    sourceDirs += file("$projectDir/generated/java")
+    generatedSourceDirs += file("$projectDir/generated/java")
   }
 }
 
-project(':freshet-manager') {
-  dependencies {
-    compile "ch.qos.logback:logback-classic:$logbackVersion"
-    compile "com.sparkjava:spark-core:$sparkJavaVersion"
-    compile "org.hsqldb:hsqldb:$hsqldbVersion"
-
-  }
+repositories {
+  mavenCentral()
+  mavenLocal()
 }
+
+configurations {
+  apt
+}
+
+ebean {
+  queryBeans = true
+  debugLevel = 1 //1 - 9
+}
+
+dependencies {
+  apt "io.ebean:querybean-generator:$querybeanGeneratorVersion"
+  apt "io.ebean:ebean:$ebeanVersion"
+  apt "io.ebean:persistence-api:$ebeanPersistenceAPIVersion"
+
+  compile "ch.qos.logback:logback-classic:$logbackVersion"
+  compile "org.apache.samza:samza-api:$samzaVersion"
+  compile "org.apache.samza:samza-core_2.11:$samzaVersion"
+  compile "org.apache.samza:samza-kafka_2.11:$samzaVersion"
+  compile "org.apache.samza:samza-kv_2.11:$samzaVersion"
+  compile "org.apache.samza:samza-kv-rocksdb_2.11:$samzaVersion"
+  compile "com.google.guava:guava:$guavaVersion"
+  compile "guru.nidi:graphviz-java:$javaGraphVizVersion"
+  compile "org.graphstream:gs-core:$graphstreamVersion"
+  compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+  compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+  compile "io.ebean:querybean-generator:$querybeanGeneratorVersion"
+  compile "io.ebean:ebean-querybean:$ebeanVersion"
+  compile "io.ebean:ebean:$ebeanVersion"
+  compile "org.hsqldb:hsqldb:$hsqldbVersion"
+  testCompile "junit:junit:$junitVersion"
+}
+
+clean.doLast {
+  // clean-up directory when necessary
+  file(new File(projectDir, "/generated")).deleteDir()
+  file(new File(projectDir, "/generated_tests")).deleteDir()
+}
+
 
 

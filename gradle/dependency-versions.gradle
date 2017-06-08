@@ -7,4 +7,10 @@ ext {
   guavaVersion = "22.0"
   javaGraphVizVersion = "0.1.6"
   graphstreamVersion = "1.3"
+  jacksonVersion = "2.7.0"
+  ebeanVersion = "10.3.1"
+  querybeanGeneratorVersion = "10.2.1"
+  ebeanAnnotationVersion = "2.3"
+  ebeanPersistenceAPIVersion = "2.2.1"
+  neo4jVersion = "3.1.5"
 }

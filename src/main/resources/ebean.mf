@@ -1,0 +1,3 @@
+entity-packages: org.pathirage.freshet.domain
+transactional-packages: org.pathirage.freshet
+querybean-packages: org.pathirage.freshet.domain

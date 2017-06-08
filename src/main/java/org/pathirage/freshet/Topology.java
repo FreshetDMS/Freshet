@@ -21,12 +21,14 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class Topology {
+  protected final String name;
   protected final Map<String, Node> nodes;
   protected final List<String> sources;
   protected final List<String> sinks;
   protected final Class<? extends StreamJobFactory> jobFactoryClass;
 
-  protected Topology(Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
+  protected Topology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
+    this.name = name;
     this.nodes = nodes;
     this.sources = sources;
     this.sinks = sinks;

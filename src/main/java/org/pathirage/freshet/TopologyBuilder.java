@@ -25,6 +25,7 @@ import java.util.Map;
 
 public class TopologyBuilder {
 
+  private String name;
   private final Map<String, Node> nodes = new HashMap<>();
   private final List<String> sources = new ArrayList<>();
   private final List<String> sinks = new ArrayList<>();
@@ -32,6 +33,11 @@ public class TopologyBuilder {
 
   public TopologyBuilder(Class<? extends StreamJobFactory> jobFactoryClass) {
     this.jobFactoryClass = jobFactoryClass;
+  }
+
+  public TopologyBuilder setName(String name) {
+    this.name = name;
+    return this;
   }
 
   public TopologyBuilder addSource(String id, PartitionedStream stream) {
@@ -85,6 +91,6 @@ public class TopologyBuilder {
   }
 
   public Topology build() {
-    return new DryRunTopology(nodes, sources, sinks, jobFactoryClass);
+    return new DryRunTopology(name, nodes, sources, sinks, jobFactoryClass);
   }
 }
