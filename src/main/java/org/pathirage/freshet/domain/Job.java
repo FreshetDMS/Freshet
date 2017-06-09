@@ -38,8 +38,28 @@ public class Job extends BaseModel {
       inverseJoinColumns = @JoinColumn(name = "output", referencedColumnName = "id"))
   private List<Stream> outputs = new ArrayList<>();
 
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name="metrics_stream", unique= true, nullable=true, insertable=true, updatable=true)
+  private Stream metrics;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name="coordinator_stream", unique= true, nullable=true, insertable=true, updatable=true)
+  private Stream coordinator;
+
+  @ManyToMany
+  @JoinTable(name = "job_changelogs",
+      joinColumns = @JoinColumn(name = "job", referencedColumnName = "id"),
+      inverseJoinColumns = @JoinColumn(name = "changelog", referencedColumnName = "id"))
+  private List<Stream> changelogs = new ArrayList<>();
+
   @ManyToOne
   private Topology topology;
+
+  @Lob
+  private byte[] operator;
+
+  @OneToMany(mappedBy = "job", cascade = CascadeType.PERSIST)
+  private List<JobProperty> properties = new ArrayList<>();
 
   public void addInput(Stream input) {
     inputs.add(input);
@@ -71,5 +91,45 @@ public class Job extends BaseModel {
 
   public void setTopology(Topology topology) {
     this.topology = topology;
+  }
+
+  public void addProperty(JobProperty property) {
+    properties.add(property);
+  }
+
+  public void addChangelog(Stream stream) {
+    changelogs.add(stream);
+  }
+
+  public byte[] getOperator() {
+    return operator;
+  }
+
+  public void setOperator(byte[] operator) {
+    this.operator = operator;
+  }
+
+  public Stream getMetrics() {
+    return metrics;
+  }
+
+  public void setMetrics(Stream metrics) {
+    this.metrics = metrics;
+  }
+
+  public Stream getCoordinator() {
+    return coordinator;
+  }
+
+  public void setCoordinator(Stream coordinator) {
+    this.coordinator = coordinator;
+  }
+
+  public List<Stream> getChangelogs() {
+    return changelogs;
+  }
+
+  public List<JobProperty> getProperties() {
+    return properties;
   }
 }

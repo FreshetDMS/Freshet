@@ -18,9 +18,7 @@ package org.pathirage.freshet;
 import io.ebean.Ebean;
 import org.apache.samza.serializers.StringSerdeFactory;
 import org.junit.Test;
-import org.pathirage.freshet.domain.Job;
-import org.pathirage.freshet.domain.StorageSystem;
-import org.pathirage.freshet.domain.Stream;
+import org.pathirage.freshet.domain.*;
 import org.pathirage.freshet.domain.Topology;
 
 import static org.junit.Assert.*;
@@ -114,6 +112,30 @@ public class PersistenceTest {
     intermediate.setSystem(system);
     intermediate.save();
 
+    Stream metrics = new Stream();
+    metrics.setIdentifier("metrics1");
+    metrics.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    metrics.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    metrics.setPartitionCount(1);
+    metrics.setSystem(system);
+    metrics.save();
+
+    Stream coordinator = new Stream();
+    coordinator.setIdentifier("coordinator1");
+    coordinator.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    coordinator.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    coordinator.setPartitionCount(1);
+    coordinator.setSystem(system);
+    coordinator.save();
+
+    Stream changelog = new Stream();
+    changelog.setIdentifier("changelog1");
+    changelog.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    changelog.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    changelog.setPartitionCount(1);
+    changelog.setSystem(system);
+    changelog.save();
+
     system.addStream(intermediate);
     system.update();
 
@@ -124,12 +146,26 @@ public class PersistenceTest {
 
     t.save();
 
+    JobProperty property = new JobProperty();
+    property.setName("sample.prop");
+    property.setValue("samplev-value");
+    property.save();
+
     Job job1 = new Job();
     job1.setIdentifier("job21");
     job1.addInput(source);
     job1.addOutput(intermediate);
+    job1.setMetrics(metrics);
+    job1.setCoordinator(coordinator);
+    job1.addChangelog(changelog);
     job1.setTopology(t);
     job1.save();
+
+    property.setJob(job1);
+    property.update();
+
+    job1.addProperty(property);
+    job1.update();
 
     Job job2 = new Job();
     job2.setIdentifier("job22");

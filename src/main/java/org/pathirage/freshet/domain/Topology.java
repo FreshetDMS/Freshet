@@ -28,16 +28,20 @@ public class Topology extends BaseModel {
   @Column(length = 100)
   private String name;
 
-  @ManyToMany
-  @JoinTable(name = "topology_source")
+  @ManyToMany(cascade = CascadeType.PERSIST)
+  @JoinTable(name = "topology_source",
+      joinColumns = @JoinColumn(name = "topology", referencedColumnName = "id"),
+      inverseJoinColumns = @JoinColumn(name = "source", referencedColumnName = "id"))
   private List<Stream> sources = new ArrayList<>();
 
-  @ManyToMany
-  @JoinTable(name = "topology_sink")
+  @ManyToMany(cascade = CascadeType.PERSIST)
+  @JoinTable(name = "topology_sink",
+      joinColumns = @JoinColumn(name = "topology", referencedColumnName = "id"),
+      inverseJoinColumns = @JoinColumn(name = "sink", referencedColumnName = "id"))
   private List<Stream> sinks = new ArrayList<>();
 
 
-  @OneToMany(mappedBy = "topology")
+  @OneToMany(mappedBy = "topology", cascade = CascadeType.PERSIST)
   private List<Job> jobs = new ArrayList<>();
 
   public List<Stream> getSources() {
