@@ -190,7 +190,11 @@ public class PersistenceTest {
     Ebean.find(Topology.class)
         .where().eq("name", "test-topology2")
         .findOneOrEmpty()
-        .ifPresent(it -> assertEquals(it.getJobs().size(), 2));
+        .ifPresent(it -> {
+          assertEquals(2, it.getJobs().size());
+          assertEquals(1, it.getSources().size());
+          assertEquals(1, it.getSinks().size());
+        });
   }
 
   @Test
