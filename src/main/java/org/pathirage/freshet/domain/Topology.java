@@ -23,8 +23,6 @@ import java.util.List;
 @Table(name = "topology")
 public class Topology extends BaseModel {
 
-  public static TopologyFinder find = new TopologyFinder();
-
   @Column(length = 100)
   private String name;
 
@@ -40,9 +38,11 @@ public class Topology extends BaseModel {
       inverseJoinColumns = @JoinColumn(name = "sink", referencedColumnName = "id"))
   private List<Stream> sinks = new ArrayList<>();
 
-
   @OneToMany(mappedBy = "topology", cascade = CascadeType.PERSIST)
   private List<Job> jobs = new ArrayList<>();
+
+  @Transient
+  private List<Job> currentStage = new ArrayList<>();
 
   public List<Stream> getSources() {
     return sources;
@@ -74,5 +74,122 @@ public class Topology extends BaseModel {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public boolean hasNextStage() {
+    if (currentStage.isEmpty() && hasJobsConsumingSources()) {
+      return true;
+    } else if (isAllCurrentJobsPublishToSinks()) {
+      return false;
+    } else if (currentStageHasDownstreamJobs()) {
+      return true;
+    }
+    return false;
+  }
+
+  public List<Job> nextStage() {
+    if (currentStage.isEmpty() && hasJobsConsumingSources()) {
+      currentStage = getInputStage();
+      return currentStage;
+    } else {
+      currentStage = getDownstreamOfCurrentStage();
+      if (!currentStage.isEmpty()) {
+        return currentStage;
+      }
+    }
+
+    return new ArrayList<>();
+  }
+
+  private List<Job> getDownstreamOfCurrentStage() {
+    List<Stream> outputs = new ArrayList<>();
+    List<Job> downstreamStage = new ArrayList<>();
+
+    for (Job job : currentStage) {
+      outputs.addAll(job.getOutputs());
+    }
+
+    for (Job job : jobs) {
+      for (Stream input : job.getInputs()) {
+        if (outputs.contains(input)) {
+          downstreamStage.add(job);
+        }
+      }
+    }
+
+    return downstreamStage;
+  }
+
+  private List<Job> getInputStage() {
+    List<Job> inputStage = new ArrayList<>();
+    for (Job job : jobs) {
+      if (isAllJobInputsSources(job.getInputs())) {
+        inputStage.add(job);
+      }
+    }
+
+    return inputStage;
+  }
+
+  private boolean hasJobsConsumingSources() {
+    for (Job job : jobs) {
+      if (isAllJobInputsSources(job.getInputs())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean currentStageHasDownstreamJobs() {
+    for (Job job : currentStage) {
+      if (hasConsumerJobs(job.getOutputs())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean hasConsumerJobs(List<Stream> streams) {
+    for (Job job : jobs) {
+      for (Stream stream : streams) {
+        if (job.getInputs().contains(stream)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private boolean isAllCurrentJobsPublishToSinks() {
+    for (Job job : currentStage) {
+      if (!areAllJobOutputsSinks(job.getOutputs())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean areAllJobOutputsSinks(List<Stream> jobOutputs) {
+    for (Stream output : jobOutputs) {
+      if (!sinks.contains(output)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean isAllJobInputsSources(List<Stream> jobInputs) {
+    for (Stream input : jobInputs) {
+      if (!sources.contains(input)) {
+        return false;
+      }
+    }
+
+    return false;
   }
 }

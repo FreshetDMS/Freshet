@@ -21,6 +21,8 @@ import org.junit.Test;
 import org.pathirage.freshet.domain.*;
 import org.pathirage.freshet.domain.Topology;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class PersistenceTest {
@@ -177,10 +179,135 @@ public class PersistenceTest {
     t.addJob(job1);
     t.addJob(job2);
 
+    t.update();
+
     Ebean.find(Job.class)
         .where().eq("topology", t)
         .findEach(it -> {
           assertTrue(it.getIdentifier().equals("job21") || it.getIdentifier().equals("job22"));
+        });
+
+    Ebean.find(Topology.class)
+        .where().eq("name", "test-topology2")
+        .findOneOrEmpty()
+        .ifPresent(it -> assertEquals(it.getJobs().size(), 2));
+  }
+
+  @Test
+  public void testTopologyTraversing() {
+    StorageSystem system = new StorageSystem();
+    system.setIdentifier("kafka3");
+    system.setBrokers("localhost:9092");
+    system.setZk("localhost:2181");
+
+    system.save();
+
+    Stream source = new Stream();
+    source.setIdentifier("source3");
+    source.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    source.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    source.setPartitionCount(10);
+    source.setSystem(system);
+    source.save();
+
+    system.addStream(source);
+    system.update();
+
+    Stream sink = new Stream();
+    sink.setIdentifier("sink3");
+    sink.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    sink.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    sink.setPartitionCount(10);
+    sink.setSystem(system);
+    sink.save();
+
+    system.addStream(sink);
+    system.update();
+
+    Stream intermediate = new Stream();
+    intermediate.setIdentifier("intermediate2");
+    intermediate.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    intermediate.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    intermediate.setPartitionCount(10);
+    intermediate.setSystem(system);
+    intermediate.save();
+
+    Stream metrics = new Stream();
+    metrics.setIdentifier("metrics2");
+    metrics.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    metrics.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    metrics.setPartitionCount(1);
+    metrics.setSystem(system);
+    metrics.save();
+
+    Stream coordinator = new Stream();
+    coordinator.setIdentifier("coordinator2");
+    coordinator.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    coordinator.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    coordinator.setPartitionCount(1);
+    coordinator.setSystem(system);
+    coordinator.save();
+
+    Stream changelog = new Stream();
+    changelog.setIdentifier("changelog2");
+    changelog.setKeySerdeFactory(StringSerdeFactory.class.getName());
+    changelog.setValueSerdeFactory(StringSerdeFactory.class.getName());
+    changelog.setPartitionCount(1);
+    changelog.setSystem(system);
+    changelog.save();
+
+    system.addStream(intermediate);
+    system.update();
+
+    Topology t = new Topology();
+    t.setName("test-topology3");
+    t.addSink(sink);
+    t.addSource(source);
+
+    t.save();
+
+    JobProperty property = new JobProperty();
+    property.setName("sample.prop");
+    property.setValue("samplev-value");
+    property.save();
+
+    Job job1 = new Job();
+    job1.setIdentifier("job31");
+    job1.addInput(source);
+    job1.addOutput(intermediate);
+    job1.setMetrics(metrics);
+    job1.setCoordinator(coordinator);
+    job1.addChangelog(changelog);
+    job1.setTopology(t);
+    job1.save();
+
+    property.setJob(job1);
+    property.update();
+
+    job1.addProperty(property);
+    job1.update();
+
+    Job job2 = new Job();
+    job2.setIdentifier("job32");
+    job2.addInput(intermediate);
+    job2.addOutput(sink);
+    job2.setTopology(t);
+    job2.save();
+
+    t.addJob(job1);
+    t.addJob(job2);
+
+    t.update();
+
+    Ebean.find(Topology.class)
+        .where().eq("name", "test-topology2")
+        .findOneOrEmpty()
+        .ifPresent(it -> {
+          List<Job> stage = it.nextStage();
+          assertEquals("job31", stage.get(0).getIdentifier());
+          stage = it.nextStage();
+          assertEquals("job32", stage.get(0).getIdentifier());
+          assertFalse(it.hasNextStage());
         });
   }
 }

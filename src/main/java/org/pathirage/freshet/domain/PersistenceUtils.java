@@ -15,16 +15,27 @@
  */
 package org.pathirage.freshet.domain;
 
-import io.ebean.Finder;
-import org.pathirage.freshet.domain.Topology;
-import org.pathirage.freshet.domain.query.QTopology;
+import io.ebean.Ebean;
 
-public class TopologyFinder extends Finder<Long, Topology> {
-  public TopologyFinder() {
-    super(Topology.class);
+import java.util.Optional;
+
+public class PersistenceUtils {
+
+  public static Topology findTopologyByName(String name) throws EntityNotFoundException {
+    Optional<Topology> topologyOptional = Ebean.find(Topology.class)
+        .where().eq("name", name)
+        .findOneOrEmpty();
+
+    if (topologyOptional.isPresent()) {
+      return topologyOptional.get();
+    }
+
+    throw new EntityNotFoundException("Cannot find topology with name '" + name + "'.");
   }
 
-  public QTopology where() {
-    return new QTopology();
+  public static class EntityNotFoundException extends Exception {
+    public EntityNotFoundException(String message) {
+      super(message);
+    }
   }
 }
