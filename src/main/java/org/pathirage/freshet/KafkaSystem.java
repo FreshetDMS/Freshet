@@ -17,7 +17,13 @@ package org.pathirage.freshet;
 
 import org.pathirage.freshet.api.System;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class KafkaSystem implements System {
+  private static final String BROKERS = "brokers";
+  private static final String ZK_CONNECTION_STR = "zk";
+
   private final String name;
   private final String brokers;
   private final String zk;
@@ -31,6 +37,16 @@ public class KafkaSystem implements System {
   @Override
   public String getName() {
     return name;
+  }
+
+  @Override
+  public Map<String, String> getProperties() {
+    Map<String, String> props = new HashMap<>();
+
+    props.put(BROKERS, brokers);
+    props.put(ZK_CONNECTION_STR, zk);
+
+    return props;
   }
 
   public String getBrokers() {

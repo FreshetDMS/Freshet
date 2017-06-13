@@ -15,6 +15,9 @@
  */
 package org.pathirage.freshet.api;
 
+import java.util.Map;
+
 public interface System {
   String getName();
+  Map<String, String> getProperties();
 }

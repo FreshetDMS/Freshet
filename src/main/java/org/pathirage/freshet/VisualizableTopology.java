@@ -18,32 +18,25 @@ package org.pathirage.freshet;
 import org.apache.samza.job.StreamJobFactory;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.stream.file.FileSinkImages;
+import org.pathirage.freshet.api.System;
 import org.pathirage.freshet.api.Visitor;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class DryRunTopology extends Topology {
+public abstract class VisualizableTopology extends Topology {
 
-  public DryRunTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
-    super(name, nodes, sources, sinks, jobFactoryClass);
-  }
 
-  @Override
-  public void run() {
-    for (String sink : sinks) {
-      Node n = nodes.get(sink);
-      DryRunVisitor v = new DryRunVisitor();
-      v.visitRoot(n);
-    }
+  protected VisualizableTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
+    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
   }
 
   @Override
   public void visualize(String outputPath) {
     for (String sink : sinks) {
       Node n = nodes.get(sink);
-      DryRunVisitor v = new DryRunVisitor();
+      TopologyVisualizer v = new TopologyVisualizer();
       v.visitRoot(n);
 
       FileSinkImages pic = new FileSinkImages(FileSinkImages.OutputType.PNG, FileSinkImages.Resolutions.TwoK);
@@ -57,9 +50,8 @@ public class DryRunTopology extends Topology {
 
   }
 
-  public static class DryRunVisitor implements Visitor {
+  public static class TopologyVisualizer implements Visitor {
     private Node root;
-    private guru.nidi.graphviz.model.Node graphNode;
     private final DefaultGraph g = new DefaultGraph("job-topology");
 
 

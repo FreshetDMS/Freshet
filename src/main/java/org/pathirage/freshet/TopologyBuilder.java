@@ -17,6 +17,7 @@ package org.pathirage.freshet;
 
 import org.apache.samza.job.StreamJobFactory;
 import org.pathirage.freshet.api.Operator;
+import org.pathirage.freshet.api.System;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class TopologyBuilder {
   private final List<String> sources = new ArrayList<>();
   private final List<String> sinks = new ArrayList<>();
   private final Class<? extends StreamJobFactory> jobFactoryClass;
+  private System defaultSystem;
 
   public TopologyBuilder(Class<? extends StreamJobFactory> jobFactoryClass) {
     this.jobFactoryClass = jobFactoryClass;
@@ -37,6 +39,12 @@ public class TopologyBuilder {
 
   public TopologyBuilder setName(String name) {
     this.name = name;
+    return this;
+  }
+
+  public TopologyBuilder setDefaultSystem(System system) {
+    this.defaultSystem = system;
+
     return this;
   }
 
@@ -91,6 +99,10 @@ public class TopologyBuilder {
   }
 
   public Topology build() {
-    return new DryRunTopology(name, nodes, sources, sinks, jobFactoryClass);
+    if (defaultSystem == null) {
+      throw new IllegalStateException("Default system is not set.");
+    }
+
+    return new PersistentTopology(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
   }
 }

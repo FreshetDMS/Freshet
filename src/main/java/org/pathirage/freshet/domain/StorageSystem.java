@@ -17,15 +17,12 @@ package org.pathirage.freshet.domain;
 
 import io.ebean.annotation.NotNull;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name="system")
+@Table(name = "system")
 public class StorageSystem extends BaseModel {
   @NotNull
   @Column(unique = true, nullable = false)
@@ -34,11 +31,8 @@ public class StorageSystem extends BaseModel {
   @OneToMany(mappedBy = "system")
   private List<Stream> streams = new ArrayList<>();
 
-  @Column(name = "brokers", nullable = false)
-  private String brokers;
-
-  @Column(name = "zk_conn_str")
-  private String zk;
+  @OneToMany(mappedBy = "system", cascade = CascadeType.PERSIST)
+  private List<StorageSystemProperty> properties = new ArrayList<>();
 
   public String getIdentifier() {
     return identifier;
@@ -56,19 +50,11 @@ public class StorageSystem extends BaseModel {
     this.streams.add(stream);
   }
 
-  public String getBrokers() {
-    return brokers;
+  public List<StorageSystemProperty> getProperties() {
+    return properties;
   }
 
-  public void setBrokers(String brokers) {
-    this.brokers = brokers;
-  }
-
-  public String getZk() {
-    return zk;
-  }
-
-  public void setZk(String zk) {
-    this.zk = zk;
+  public void addProperty(StorageSystemProperty property) {
+    properties.add(property);
   }
 }

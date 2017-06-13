@@ -16,14 +16,15 @@
 package org.pathirage.freshet;
 
 import org.apache.samza.job.StreamJobFactory;
+import org.pathirage.freshet.api.System;
 
 import java.util.List;
 import java.util.Map;
 
 public class SamzaTopology extends Topology {
 
-  public SamzaTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
-    super(name, nodes, sources, sinks, jobFactoryClass);
+  protected SamzaTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
+    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
   }
 
   @Override

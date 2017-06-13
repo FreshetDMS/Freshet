@@ -48,7 +48,8 @@ public class TopologyBuilderTest {
     PartitionedStream source2 = new PartitionedStream(kafkaSystem, "source2", 1, String.class, String.class);
     PartitionedStream sink1 = new PartitionedStream(kafkaSystem, "sink1", 1, String.class, String.class);
 
-    topologyBuilder.addSource("source1", source1)
+    topologyBuilder.setDefaultSystem(kafkaSystem)
+        .addSource("source1", source1)
         .addSource("source2", source2)
         .addOperator("op1", new Operator() {
           @Override

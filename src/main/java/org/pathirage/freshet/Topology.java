@@ -16,6 +16,7 @@
 package org.pathirage.freshet;
 
 import org.apache.samza.job.StreamJobFactory;
+import org.pathirage.freshet.api.System;
 
 import java.util.List;
 import java.util.Map;
@@ -26,12 +27,15 @@ public abstract class Topology {
   protected final List<String> sources;
   protected final List<String> sinks;
   protected final Class<? extends StreamJobFactory> jobFactoryClass;
+  protected final System defaultSystem;
 
-  protected Topology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, Class<? extends StreamJobFactory> jobFactoryClass) {
+  protected Topology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks,
+                     System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
     this.name = name;
     this.nodes = nodes;
     this.sources = sources;
     this.sinks = sinks;
+    this.defaultSystem = defaultSystem;
     this.jobFactoryClass = jobFactoryClass;
   }
 

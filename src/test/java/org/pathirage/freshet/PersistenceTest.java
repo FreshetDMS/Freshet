@@ -30,10 +30,22 @@ public class PersistenceTest {
   public void testTopologyCreation() {
     StorageSystem system = new StorageSystem();
     system.setIdentifier("kafka1");
-    system.setBrokers("localhost:9092");
-    system.setZk("localhost:2181");
 
     system.save();
+
+    StorageSystemProperty brokers = new StorageSystemProperty("brokers", "localhost:9092");
+    brokers.setSystem(system);
+    brokers.save();
+
+    StorageSystemProperty zk = new StorageSystemProperty("zk", "localhost:2181");
+    zk.setSystem(system);
+    zk.save();
+
+    system.addProperty(brokers);
+    system.addProperty(zk);
+    system.update();
+
+
 
     Stream source = new Stream();
     source.setIdentifier("source1");
@@ -79,10 +91,20 @@ public class PersistenceTest {
   public void testTopologyWithJobs() {
     StorageSystem system = new StorageSystem();
     system.setIdentifier("kafka2");
-    system.setBrokers("localhost:9092");
-    system.setZk("localhost:2181");
 
     system.save();
+
+    StorageSystemProperty brokers = new StorageSystemProperty("brokers", "localhost:9092");
+    brokers.setSystem(system);
+    brokers.save();
+
+    StorageSystemProperty zk = new StorageSystemProperty("zk", "localhost:2181");
+    zk.setSystem(system);
+    zk.save();
+
+    system.addProperty(brokers);
+    system.addProperty(zk);
+    system.update();
 
     Stream source = new Stream();
     source.setIdentifier("source2");
@@ -201,10 +223,20 @@ public class PersistenceTest {
   public void testTopologyTraversing() {
     StorageSystem system = new StorageSystem();
     system.setIdentifier("kafka3");
-    system.setBrokers("localhost:9092");
-    system.setZk("localhost:2181");
 
     system.save();
+
+    StorageSystemProperty brokers = new StorageSystemProperty("brokers", "localhost:9092");
+    brokers.setSystem(system);
+    brokers.save();
+
+    StorageSystemProperty zk = new StorageSystemProperty("zk", "localhost:2181");
+    zk.setSystem(system);
+    zk.save();
+
+    system.addProperty(brokers);
+    system.addProperty(zk);
+    system.update();
 
     Stream source = new Stream();
     source.setIdentifier("source3");

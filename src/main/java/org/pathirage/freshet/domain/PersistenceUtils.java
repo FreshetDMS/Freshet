@@ -33,6 +33,18 @@ public class PersistenceUtils {
     throw new EntityNotFoundException("Cannot find topology with name '" + name + "'.");
   }
 
+  public static StorageSystem findSystemByName(String name) throws EntityNotFoundException {
+    Optional<StorageSystem> systemOptional = Ebean.find(StorageSystem.class)
+        .where().eq("identifier", name)
+        .findOneOrEmpty();
+
+    if (systemOptional.isPresent()) {
+      return systemOptional.get();
+    }
+
+    throw new EntityNotFoundException("Cannot find storage system with identifier '" + name + "'.");
+  }
+
   public static class EntityNotFoundException extends Exception {
     public EntityNotFoundException(String message) {
       super(message);
