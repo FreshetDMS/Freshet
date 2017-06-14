@@ -14,4 +14,6 @@ ext {
   ebeanPersistenceAPIVersion = "2.2.1"
   neo4jVersion = "3.1.5"
   mysqlVersion = "6.0.6"
+  kafkaVersion = "0.10.0.1"
+  zkClientVersion = "0.8"
 }

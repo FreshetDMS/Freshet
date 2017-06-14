@@ -15,11 +15,8 @@
  */
 package org.pathirage.freshet.api;
 
-import java.util.Map;
-
-public interface System {
+public interface Stream {
   String getName();
-  Map<String, String> getProperties();
-  boolean isStreamExists(Stream stream);
-  boolean createStream(Stream stream);
+
+  System getSystem();
 }

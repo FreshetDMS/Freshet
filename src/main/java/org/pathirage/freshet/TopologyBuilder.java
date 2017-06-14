@@ -48,7 +48,7 @@ public class TopologyBuilder {
     return this;
   }
 
-  public TopologyBuilder addSource(String id, PartitionedStream stream) {
+  public TopologyBuilder addSource(String id, KafkaTopic stream) {
     if (nodes.containsKey(id)) {
       throw new IllegalArgumentException("Source with id " + id + " already exists in the topology.");
     }
@@ -59,7 +59,7 @@ public class TopologyBuilder {
     return this;
   }
 
-  public TopologyBuilder addSink(String id, PartitionedStream stream, String parent) {
+  public TopologyBuilder addSink(String id, KafkaTopic stream, String parent) {
     if (nodes.containsKey(id)) {
       throw new IllegalArgumentException("Sink with id " + id + " already exists in the topology.");
     }
@@ -103,6 +103,6 @@ public class TopologyBuilder {
       throw new IllegalStateException("Default system is not set.");
     }
 
-    return new PersistentTopology(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
+    return new PersistentSamzaTopology(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
   }
 }

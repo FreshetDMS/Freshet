@@ -59,6 +59,8 @@ dependencies {
   compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
   compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
   compile "io.ebean:querybean-generator:$querybeanGeneratorVersion"
+  compile "org.apache.kafka:kafka-tools:$kafkaVersion"
+  compile "com.101tec:zkclient:$zkClientVersion"
   compile "io.ebean:ebean-querybean:$ebeanVersion"
   compile "io.ebean:ebean:$ebeanVersion"
   compile "org.hsqldb:hsqldb:$hsqldbVersion"

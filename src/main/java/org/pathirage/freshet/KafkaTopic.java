@@ -16,9 +16,10 @@
 package org.pathirage.freshet;
 
 import org.apache.samza.serializers.SerdeFactory;
+import org.pathirage.freshet.api.Stream;
 import org.pathirage.freshet.api.System;
 
-public class PartitionedStream {
+public class KafkaTopic implements Stream {
   private final String name;
   private final int partitionCount;
   private final Class keyType;
@@ -27,7 +28,7 @@ public class PartitionedStream {
 
   private SerdeResolver serdeResolver = SerdeResolver.INSTANCE;
 
-  public PartitionedStream(System system, String name, int partitionCount, Class keyType, Class valueType) {
+  public KafkaTopic(System system, String name, int partitionCount, Class keyType, Class valueType) {
     this.system = system;
     this.name = name;
     this.partitionCount = partitionCount;

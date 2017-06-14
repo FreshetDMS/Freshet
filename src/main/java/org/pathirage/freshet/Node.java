@@ -35,11 +35,16 @@ public class Node {
   public static enum Type {
     SOURCE,
     SINK,
-    OPERATOR;
+    OPERATOR,
+    INTERMEDIATE_STREAM;
   }
 
   public void addInput(Node input) {
     this.inputs.add(input);
+  }
+
+  public void removeInput(Node input) {
+    this.inputs.remove(input);
   }
 
   public String getId() {
@@ -59,10 +64,51 @@ public class Node {
   }
 
   public void childrenAccept(Visitor visitor) {
+    if (inputs.isEmpty()) {
+      return;
+    }
+
     int i = 0;
     for (Node input : inputs) {
       visitor.visit(input, i, this);
       i++;
     }
+  }
+
+  public int deriveDownstreamPartitionCount() {
+    // Assume all inputs have same partition count
+    // TODO: How to handle unequal partition counts in input
+    if (type == Type.OPERATOR) {
+      List<Integer> inputPartitionCounts = new ArrayList<>();
+      for (Node n : inputs) {
+        inputPartitionCounts.add(n.deriveDownstreamPartitionCount());
+      }
+
+      if (!areAllElementsEqual(inputPartitionCounts)){
+        throw new IllegalStateException("Not all inputs derive same partition count.");
+      } else {
+        return inputPartitionCounts.get(0);
+      }
+    }
+
+    return ((KafkaTopic)value).getPartitionCount();
+  }
+
+  private boolean areAllElementsEqual(List<Integer> intList) {
+    Integer previous = null;
+
+    for(Integer i : intList) {
+      if (previous == null) {
+        previous = i;
+      }
+
+      if (!previous.equals(i)) {
+        return false;
+      }
+
+      previous = i;
+    }
+
+    return true;
   }
 }

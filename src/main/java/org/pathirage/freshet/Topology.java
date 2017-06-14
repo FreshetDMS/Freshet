@@ -54,4 +54,8 @@ public abstract class Topology {
   public List<String> getSinks() {
     return sinks;
   }
+
+  public String getName(){
+    return name;
+  }
 }

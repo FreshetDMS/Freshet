@@ -45,6 +45,27 @@ public class PersistenceUtils {
     throw new EntityNotFoundException("Cannot find storage system with identifier '" + name + "'.");
   }
 
+  public static boolean isSystemExists(String name) {
+    return Ebean.find(StorageSystem.class)
+        .where().eq("identifier", name)
+        .findOneOrEmpty().isPresent();
+  }
+
+  public static boolean isStreamExists(String name, String systemName) {
+    StorageSystem system;
+    try {
+      system = findSystemByName(systemName);
+    } catch (EntityNotFoundException e) {
+      throw new RuntimeException("Cannot find system with name '" + systemName + "'.");
+    }
+
+    return Ebean.find(Stream.class)
+        .where()
+        .eq("identifier", name)
+        .eq("system", system)
+        .findOneOrEmpty().isPresent();
+  }
+
   public static class EntityNotFoundException extends Exception {
     public EntityNotFoundException(String message) {
       super(message);

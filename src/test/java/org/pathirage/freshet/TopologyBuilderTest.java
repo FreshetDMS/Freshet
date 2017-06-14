@@ -18,6 +18,7 @@ package org.pathirage.freshet;
 import org.apache.samza.job.local.ThreadJobFactory;
 import org.apache.samza.serializers.IntegerSerdeFactory;
 import org.apache.samza.serializers.JsonSerdeFactory;
+import org.apache.samza.serializers.SerdeFactory;
 import org.apache.samza.serializers.StringSerdeFactory;
 import org.apache.samza.system.IncomingMessageEnvelope;
 import org.apache.samza.task.MessageCollector;
@@ -44,20 +45,40 @@ public class TopologyBuilderTest {
 
     KafkaSystem kafkaSystem = new KafkaSystem("dev-kafka", "localhost:9092", "localhost:2181");
 
-    PartitionedStream source1 = new PartitionedStream(kafkaSystem, "source1", 1, String.class, String.class);
-    PartitionedStream source2 = new PartitionedStream(kafkaSystem, "source2", 1, String.class, String.class);
-    PartitionedStream sink1 = new PartitionedStream(kafkaSystem, "sink1", 1, String.class, String.class);
+    KafkaTopic source1 = new KafkaTopic(kafkaSystem, "source1", 1, String.class, String.class);
+    KafkaTopic source2 = new KafkaTopic(kafkaSystem, "source2", 1, String.class, String.class);
+    KafkaTopic sink1 = new KafkaTopic(kafkaSystem, "sink1", 1, String.class, String.class);
 
     topologyBuilder.setDefaultSystem(kafkaSystem)
         .addSource("source1", source1)
         .addSource("source2", source2)
         .addOperator("op1", new Operator() {
           @Override
+          public Class<? extends SerdeFactory> getResultKeySerdeFactory() {
+            return StringSerdeFactory.class;
+          }
+
+          @Override
+          public Class<? extends SerdeFactory> getResultValueSerdeFactory() {
+            return StringSerdeFactory.class;
+          }
+
+          @Override
           public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) throws Exception {
 
           }
         }, "source1", "source2")
         .addOperator("op2", new Operator() {
+          @Override
+          public Class<? extends SerdeFactory> getResultKeySerdeFactory() {
+            return StringSerdeFactory.class;
+          }
+
+          @Override
+          public Class<? extends SerdeFactory> getResultValueSerdeFactory() {
+            return StringSerdeFactory.class;
+          }
+
           @Override
           public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) throws Exception {
 
@@ -66,6 +87,8 @@ public class TopologyBuilderTest {
         .addSink("sink1", sink1, "op2");
 
     Topology topology = topologyBuilder.build();
+
+    topology.visualize("test-enrichment.png");
 
     Assert.assertNotNull(topology);
     Assert.assertTrue(topology.getSinks().contains("sink1"));

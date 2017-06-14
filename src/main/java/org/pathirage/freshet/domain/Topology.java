@@ -76,6 +76,12 @@ public class Topology extends BaseModel {
     this.name = name;
   }
 
+  /**
+   * IT looks like we don't need stage iteration feature. We just need a way to find a jobs upstream and downstream.
+   * Recursive scheduling technique used in Spark can be utilized to schedule jobs.
+   */
+
+
   public boolean hasNextStage() {
     if (currentStage.isEmpty() && hasJobsConsumingSources()) {
       return true;

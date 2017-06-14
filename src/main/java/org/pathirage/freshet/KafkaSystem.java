@@ -15,6 +15,7 @@
  */
 package org.pathirage.freshet;
 
+import org.pathirage.freshet.api.Stream;
 import org.pathirage.freshet.api.System;
 
 import java.util.HashMap;
@@ -47,6 +48,16 @@ public class KafkaSystem implements System {
     props.put(ZK_CONNECTION_STR, zk);
 
     return props;
+  }
+
+  @Override
+  public boolean isStreamExists(Stream stream) {
+    return false;
+  }
+
+  @Override
+  public boolean createStream(Stream stream) {
+    return false;
   }
 
   public String getBrokers() {

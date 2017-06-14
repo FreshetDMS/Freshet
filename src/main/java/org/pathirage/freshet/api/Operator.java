@@ -15,7 +15,10 @@
  */
 package org.pathirage.freshet.api;
 
+import org.apache.samza.serializers.SerdeFactory;
 import org.apache.samza.task.StreamTask;
 
 public interface Operator extends StreamTask {
+  Class<? extends SerdeFactory> getResultKeySerdeFactory();
+  Class<? extends SerdeFactory> getResultValueSerdeFactory();
 }

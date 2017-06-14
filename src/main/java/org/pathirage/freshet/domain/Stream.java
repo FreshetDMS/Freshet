@@ -25,7 +25,7 @@ import java.util.List;
 public class Stream extends BaseModel {
 
   @NotNull
-  @Column(unique = true, nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false)
   private String identifier;
 
   @NotNull
