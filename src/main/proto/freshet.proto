@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.pathirage.freshet.grpc";
+option java_outer_classname = "FreshetProto";
+
+service Freshet {
+    rpc SubmitTopology(PBTopology) returns (TopologySubmissionResponse) {}
+    rpc GetTopology(GetTopologyRequest) returns (PBTopology) {}
+    rpc RegisterSystem(PBSystem) returns (SystemRegistrationResponse) {}
+    rpc RegisterStream(PBStream) returns (StreamRegistrationResponse) {}
+}
+
+message TopologySubmissionResponse {
+    string name = 1;
+    int64 id = 2;
+}
+
+message SystemRegistrationResponse {
+    string identifier = 1;
+    int64 id = 2;
+}
+
+message StreamRegistrationResponse {
+    string identifier = 1;
+    int64 id = 3;
+}
+
+message GetTopologyRequest {
+    string name = 1;
+}
+
+message PBTopology {
+    string name = 1;
+    map<string, string> properties = 2;
+    repeated PBStreamReference inputs = 3;
+    repeated PBStreamReference outputs = 4;
+    repeated PBJob jobs = 5;
+}
+
+message PBJob {
+    string identifier = 1;
+    PBStreamReference metrics_stream = 2;
+    PBStreamReference coordinator_stream = 3;
+    string topology = 4;
+    bytes operator = 5;
+    map<string, string> properties = 6;
+    repeated PBStreamReference inputs = 7;
+    repeated PBStreamReference outputs = 8;
+    repeated PBStreamReference changelogs = 9;
+}
+
+message PBStreamReference {
+    string system = 1;
+    string identifier = 2;
+}
+
+message PBStream {
+    string identifier = 1;
+    int32 partition_count = 2;
+    string key_serde_factory = 3;
+    string value_serde_factory = 4;
+    string system = 5;
+}
+
+message PBSystem {
+    string identifier = 1;
+    map<string, string> properties = 2;
+}

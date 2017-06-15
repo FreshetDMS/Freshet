@@ -20,10 +20,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import java.util.Properties;
 
 public class Utils {
-  public static <T> T instantiate(final String className, final Class<T> type) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    return type.cast(Class.forName(className).newInstance());
-  }
-
   public static void executeUntilSuccessOrTimeout(final ExponentialBackOffFunction fn, final long startTimeMills, final long timeoutMills) {
     int i = 0;
 

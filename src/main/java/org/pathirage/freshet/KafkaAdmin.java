@@ -40,9 +40,9 @@ public class KafkaAdmin {
   private final ZkUtils kafkaZKUtils;
   private final KafkaConsumer<String, String> consumer;
 
-  public KafkaAdmin(String benchmark, String brokers, String zkConnect) {
+  public KafkaAdmin(String benchmark, String brokers, String zkConnect, String topologyName) {
     this.kafkaZKUtils = createZkUtils(zkConnect);
-    this.consumer = new KafkaConsumer<String, String>(Utils.getConsumerProperties(brokers, "kafka-admin-" + benchmark));
+    this.consumer = new KafkaConsumer<String, String>(Utils.getConsumerProperties(brokers, topologyName + "-consumer-group"));
   }
 
   private ZkUtils createZkUtils(String zkConnectionStr) {

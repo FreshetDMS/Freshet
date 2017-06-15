@@ -16,4 +16,7 @@ ext {
   mysqlVersion = "6.0.6"
   kafkaVersion = "0.10.0.1"
   zkClientVersion = "0.8"
+  gsonVersion = "2.8.1"
+  grpcVersion = "1.4.0"
+  protobufVersion = "3.3.0"
 }

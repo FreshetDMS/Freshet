@@ -17,9 +17,14 @@ package org.pathirage.freshet.domain;
 
 import io.ebean.Ebean;
 
+import java.util.List;
 import java.util.Optional;
 
 public class PersistenceUtils {
+
+  public static List<Topology> listTopologies() {
+    return Ebean.find(Topology.class).findList();
+  }
 
   public static Topology findTopologyByName(String name) throws EntityNotFoundException {
     Optional<Topology> topologyOptional = Ebean.find(Topology.class)
@@ -33,6 +38,10 @@ public class PersistenceUtils {
     throw new EntityNotFoundException("Cannot find topology with name '" + name + "'.");
   }
 
+  public static List<StorageSystem> listStorageSystems() {
+    return Ebean.find(StorageSystem.class).findList();
+  }
+
   public static StorageSystem findSystemByName(String name) throws EntityNotFoundException {
     Optional<StorageSystem> systemOptional = Ebean.find(StorageSystem.class)
         .where().eq("identifier", name)
@@ -42,7 +51,7 @@ public class PersistenceUtils {
       return systemOptional.get();
     }
 
-    throw new EntityNotFoundException("Cannot find storage system with identifier '" + name + "'.");
+    throw new EntityNotFoundException("Cannot find storage system '" + name + "'.");
   }
 
   public static boolean isSystemExists(String name) {
@@ -64,6 +73,22 @@ public class PersistenceUtils {
         .eq("identifier", name)
         .eq("system", system)
         .findOneOrEmpty().isPresent();
+  }
+
+  public static Stream findStreamByName(String name, String system) throws EntityNotFoundException {
+    StorageSystem storageSystem = findSystemByName(system);
+
+    Optional<Stream> streamOptional =  Ebean.find(Stream.class)
+        .where()
+        .eq("identifier", name)
+        .eq("system", storageSystem)
+        .findOneOrEmpty();
+
+    if (streamOptional.isPresent()) {
+      return streamOptional.get();
+    }
+
+    throw new EntityNotFoundException("Cannot find stream " + name + " of system " + system);
   }
 
   public static class EntityNotFoundException extends Exception {

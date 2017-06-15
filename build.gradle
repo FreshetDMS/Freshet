@@ -4,9 +4,11 @@ version '0.1-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'ebean'
+apply plugin: 'application'
+apply plugin: 'project-report'
+apply plugin: 'com.google.protobuf'
 
 sourceCompatibility = 1.8
-
 
 buildscript {
   repositories {
@@ -16,6 +18,7 @@ buildscript {
 
   dependencies {
     classpath "io.ebean:ebean-gradle-plugin:10.2.1"
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
   }
 }
 
@@ -50,7 +53,9 @@ dependencies {
   compile "ch.qos.logback:logback-classic:$logbackVersion"
   compile "org.apache.samza:samza-api:$samzaVersion"
   compile "org.apache.samza:samza-core_2.11:$samzaVersion"
-  compile "org.apache.samza:samza-kafka_2.11:$samzaVersion"
+  compile("org.apache.samza:samza-kafka_2.11:$samzaVersion"){
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
   compile "org.apache.samza:samza-kv_2.11:$samzaVersion"
   compile "org.apache.samza:samza-kv-rocksdb_2.11:$samzaVersion"
   compile "com.google.guava:guava:$guavaVersion"
@@ -59,20 +64,57 @@ dependencies {
   compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
   compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
   compile "io.ebean:querybean-generator:$querybeanGeneratorVersion"
-  compile "org.apache.kafka:kafka-tools:$kafkaVersion"
-  compile "com.101tec:zkclient:$zkClientVersion"
+  compile("org.apache.kafka:kafka-tools:$kafkaVersion"){
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+  compile("com.101tec:zkclient:$zkClientVersion"){
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
   compile "io.ebean:ebean-querybean:$ebeanVersion"
   compile "io.ebean:ebean:$ebeanVersion"
   compile "org.hsqldb:hsqldb:$hsqldbVersion"
+//  compile "com.sparkjava:spark-core:$sparkJavaVersion"
+//  compile "com.google.code.gson:gson:$gsonVersion"
   compile "mysql:mysql-connector-java:$mysqlVersion"
+  compile "io.grpc:grpc-netty:$grpcVersion"
+  compile "io.grpc:grpc-protobuf:$grpcVersion"
+  compile "io.grpc:grpc-stub:$grpcVersion"
+
+  testCompile "io.grpc:grpc-testing:$grpcVersion"
+  testCompile "org.mockito:mockito-core:1.9.5"
   testCompile "junit:junit:$junitVersion"
 }
 
-clean.doLast {
-  // clean-up directory when necessary
-  file(new File(projectDir, "/generated")).deleteDir()
-  file(new File(projectDir, "/generated_tests")).deleteDir()
+protobuf {
+  protoc {
+    artifact = "com.google.protobuf:protoc:$protobufVersion"
+  }
+  plugins {
+    grpc {
+      artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+    }
+  }
+  generateProtoTasks {
+    all()*.plugins {
+      grpc {
+        // To generate deprecated interfaces and static bindService method,
+        // turn the enable_deprecated option to true below:
+        option 'enable_deprecated=false'
+      }
+    }
+  }
 }
+
+idea {
+  module {
+    // Not using generatedSourceDirs because of
+    // https://discuss.gradle.org/t/support-for-intellij-2016/15294/8
+    sourceDirs += file("${projectDir}/build/generated/source/proto/main/java");
+    sourceDirs += file("${projectDir}/build/generated/source/proto/main/grpc");
+  }
+}
+
+mainClassName = "org.pathirage.freshet.FreshetServer"
 
 
 

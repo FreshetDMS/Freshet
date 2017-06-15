@@ -41,6 +41,9 @@ public class Topology extends BaseModel {
   @OneToMany(mappedBy = "topology", cascade = CascadeType.PERSIST)
   private List<Job> jobs = new ArrayList<>();
 
+  @Column(name = "status")
+  private Status status;
+
   @Transient
   private List<Job> currentStage = new ArrayList<>();
 
@@ -74,6 +77,14 @@ public class Topology extends BaseModel {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
   }
 
   /**

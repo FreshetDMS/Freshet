@@ -74,31 +74,6 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     super.visualize(outputPath);
   }
 
-  private void persistSources() {
-    for (String source : sources) {
-      Node n = nodes.get(source);
-
-      if (n.getType() != Node.Type.SOURCE) {
-        throw new IllegalArgumentException("Incompatible source node type. Expected: " + Node.Type.SOURCE + " Found: " +
-            n.getType());
-      }
-
-      persistStream((KafkaTopic) n.getValue());
-    }
-  }
-
-  private void persistSinks() {
-    for (String sink : sinks) {
-      Node n = nodes.get(sink);
-
-      if (n.getType() != Node.Type.SINK) {
-        throw new IllegalArgumentException("Incompatible sink node type. Expected: " + Node.Type.SINK + " Found: " +
-            n.getType());
-      }
-
-      persistStream((KafkaTopic) n.getValue());
-    }
-  }
 
   private void persistStream(KafkaTopic pStream) {
 
@@ -245,7 +220,37 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     }
 
     private void createAndPersistStream(KafkaTopic stream) {
-      // TODO: use kafka admin to check the existence of topic and create if it doesn't exist
+      // TODO: May be we should delegate this to manager web app.
+      KafkaSystem system = (KafkaSystem) stream.getSystem();
+      if (!system.isStreamExists(stream)) {
+        system.createStream(stream);
+      }
+
+      if (!PersistenceUtils.isStreamExists(stream.getName(), system.getName())) {
+        StorageSystem storageSystem;
+        try {
+          storageSystem = PersistenceUtils.findSystemByName(system.getName());
+        } catch (PersistenceUtils.EntityNotFoundException e) {
+          String errMessage = String.format("Cannot find storage system '%s' in persistent storage.", system.getName());
+          logger.error(errMessage, e);
+          throw new IllegalStateException(errMessage, e);
+        }
+
+        Stream persistedStream = new Stream();
+        persistedStream.setIdentifier(stream.getName());
+        persistedStream.setPartitionCount(stream.getPartitionCount());
+        persistedStream.setSystem(storageSystem);
+        persistedStream.setKeySerdeFactory(stream.getKeySerdeFactory().getName());
+        persistedStream.setValueSerdeFactory(stream.getValueSerdeFactory().getName());
+
+        persistedStream.save();
+
+        storageSystem.addStream(persistedStream);
+        storageSystem.update();
+      }
+
+      // TODO: Do we need to check whether stream in the persistent store has same properties as current stream?
+      // When we do it at the manager, manager can take care of everything.
     }
   }
 
@@ -273,7 +278,13 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     public void visit(Node n, int ordinal, Node parent) {
       switch (n.getType()) {
         case OPERATOR:
-          // TODO
+          if (!isSinkOrIntermediateStream(parent)) {
+            String errMessage = String.format("Parent of an operator must be a sink or an intermediate stream. " +
+                    "But found a node %s of type %s", parent.getId(), parent.getType());
+            logger.error(errMessage);
+            throw new IllegalStateException(errMessage);
+          }
+
           break;
         default:
           if (logger.isDebugEnabled()) {
@@ -284,5 +295,16 @@ public class PersistentSamzaTopology extends VisualizableTopology {
 
       n.childrenAccept(this);
     }
+
+    private boolean isSinkOrIntermediateStream(Node n) {
+      return  n.getType() == Node.Type.SINK ||
+          n.getType() == Node.Type.INTERMEDIATE_STREAM;
+    }
+
+    private void deployAndPersistOperator(Node n, Node parent) {
+
+    }
   }
+
+
 }

@@ -55,6 +55,9 @@ public class Job extends BaseModel {
   @ManyToOne
   private Topology topology;
 
+  @Column(name = "status")
+  private Status status;
+
   @Lob
   private byte[] operator;
 
@@ -131,5 +134,13 @@ public class Job extends BaseModel {
 
   public List<JobProperty> getProperties() {
     return properties;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
   }
 }

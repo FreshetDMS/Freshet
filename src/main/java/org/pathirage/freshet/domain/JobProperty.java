@@ -33,6 +33,12 @@ public class JobProperty extends BaseModel{
   @ManyToOne
   private Job job;
 
+  public JobProperty(String name, String value, Job job) {
+    this.name = name;
+    this.value = value;
+    this.job = job;
+  }
+
   public String getName() {
     return name;
   }
