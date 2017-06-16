@@ -22,6 +22,7 @@ public enum Status {
   NEW("NEW"),
   RUNNING("RUNNING"),
   FAILED("FAILED"),
+  DEPLOYMENT_FAILED("DEPLOYMENT_FAILED"),
   KILLED("KILLED");
 
   String dbValue;

@@ -28,18 +28,22 @@ public abstract class Topology {
   protected final List<String> sinks;
   protected final Class<? extends StreamJobFactory> jobFactoryClass;
   protected final System defaultSystem;
+  protected final String host;
+  protected final int port;
 
   protected Topology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks,
-                     System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
+                     System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass, String host, int port) {
     this.name = name;
     this.nodes = nodes;
     this.sources = sources;
     this.sinks = sinks;
     this.defaultSystem = defaultSystem;
     this.jobFactoryClass = jobFactoryClass;
+    this.host = host;
+    this.port = port;
   }
 
-  public abstract void run();
+  public abstract void submit();
 
   public abstract void visualize(String outputPath);
 

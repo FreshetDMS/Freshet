@@ -15,6 +15,10 @@
  */
 package org.pathirage.freshet;
 
+import com.google.protobuf.ByteString;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.samza.job.StreamJobFactory;
 import org.pathirage.freshet.api.Operator;
 import org.pathirage.freshet.api.System;
@@ -23,21 +27,28 @@ import org.pathirage.freshet.domain.PersistenceUtils;
 import org.pathirage.freshet.domain.StorageSystem;
 import org.pathirage.freshet.domain.StorageSystemProperty;
 import org.pathirage.freshet.domain.Stream;
+import org.pathirage.freshet.grpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class PersistentSamzaTopology extends VisualizableTopology {
+public class SamzaTopology extends VisualizableTopology {
 
-  private static Logger logger = LoggerFactory.getLogger(PersistentSamzaTopology.class);
+  private static Logger logger = LoggerFactory.getLogger(SamzaTopology.class);
 
-  protected PersistentSamzaTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
-    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
+  private final ManagedChannel channel;
+  private final FreshetGrpc.FreshetBlockingStub blockingStub;
+
+  SamzaTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass, String host, int port) {
+    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass, host, port);
+
+    this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+    this.blockingStub = FreshetGrpc.newBlockingStub(channel);
   }
 
   @Override
-  public void run() {
+  public void submit() {
     persistSystems(systemsUsedInCurrentTopologyy());
 
     // Introduce intermediate streams
@@ -56,11 +67,34 @@ public class PersistentSamzaTopology extends VisualizableTopology {
       tv.visitRoot(n);
     }
 
+    PBTopology.Builder builder = PBTopology.newBuilder().setName(name);
+
+    for (String sink : sinks) {
+      KafkaTopic topic = (KafkaTopic) nodes.get(sink).getValue();
+      builder.addOutputs(PBStreamReference.newBuilder()
+          .setIdentifier(topic.getName())
+          .setSystem(topic.getSystem().getName())
+          .build());
+    }
+
+    for (String source : sources) {
+      KafkaTopic topic = (KafkaTopic) nodes.get(source).getValue();
+      builder.addOutputs(PBStreamReference.newBuilder()
+          .setIdentifier(topic.getName())
+          .setSystem(topic.getSystem().getName())
+          .build());
+    }
+
+    // TODO: Add support for topology properties
+    Map<String, Boolean> vistorState = new HashMap<>();
+
     for (String sink : sinks) {
       Node n = nodes.get(sink);
-      OperatorVisitor v = new OperatorVisitor();
+      PBTopologyBuilderVisitor v = new PBTopologyBuilderVisitor(builder, vistorState);
       v.visitRoot(n);
     }
+
+    blockingStub.submitTopology(builder.build());
   }
 
   @Override
@@ -74,47 +108,15 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     super.visualize(outputPath);
   }
 
-
-  private void persistStream(KafkaTopic pStream) {
-
-    if (!PersistenceUtils.isStreamExists(pStream.getName(), pStream.getSystem().getName())) {
-      StorageSystem storageSystem;
-      try {
-        storageSystem = PersistenceUtils.findSystemByName(pStream.getSystem().getName());
-      } catch (PersistenceUtils.EntityNotFoundException e) {
-        throw new IllegalStateException("Cannot find storage system '" + pStream.getSystem().getName() + "'.");
-      }
-
-      Stream stream = new Stream();
-      stream.setIdentifier(pStream.getName());
-      stream.setSystem(storageSystem);
-      stream.setPartitionCount(pStream.getPartitionCount());
-      stream.setValueSerdeFactory(pStream.getValueSerdeFactory().getName());
-      stream.setKeySerdeFactory(pStream.getKeySerdeFactory().getName());
-      stream.save();
-
-      storageSystem.addStream(stream);
-      storageSystem.update();
-    }
-
-  }
-
   private void persistSystems(List<System> systems) {
     for (System system : systems) {
-      if (!PersistenceUtils.isSystemExists(system.getName())) {
-        StorageSystem storageSystem = new StorageSystem();
-        storageSystem.setIdentifier(system.getName());
-        storageSystem.save();
-
-        for (Map.Entry<String, String> property : system.getProperties().entrySet()) {
-          StorageSystemProperty storageSystemProperty = new StorageSystemProperty(property.getKey(), property.getValue());
-          storageSystemProperty.setSystem(storageSystem);
-          storageSystemProperty.save();
-          storageSystem.addProperty(storageSystemProperty);
-        }
-
-        storageSystem.update();
+      PBSystem.Builder systemBuilder = PBSystem.newBuilder()
+          .setIdentifier(system.getName());
+      for (Map.Entry<String, String> property : system.getProperties().entrySet()) {
+        systemBuilder.putProperties(property.getKey(), property.getValue());
       }
+
+      blockingStub.registerSystem(systemBuilder.build());
     }
   }
 
@@ -188,7 +190,7 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     }
   }
 
-  public static class StreamVisitor implements Visitor {
+  public class StreamVisitor implements Visitor {
     private Node root;
     private final String topologyName;
 
@@ -220,36 +222,13 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     }
 
     private void createAndPersistStream(KafkaTopic stream) {
-      // TODO: May be we should delegate this to manager web app.
-      KafkaSystem system = (KafkaSystem) stream.getSystem();
-      if (!system.isStreamExists(stream)) {
-        system.createStream(stream);
-      }
-
-      if (!PersistenceUtils.isStreamExists(stream.getName(), system.getName())) {
-        StorageSystem storageSystem;
-        try {
-          storageSystem = PersistenceUtils.findSystemByName(system.getName());
-        } catch (PersistenceUtils.EntityNotFoundException e) {
-          String errMessage = String.format("Cannot find storage system '%s' in persistent storage.", system.getName());
-          logger.error(errMessage, e);
-          throw new IllegalStateException(errMessage, e);
-        }
-
-        Stream persistedStream = new Stream();
-        persistedStream.setIdentifier(stream.getName());
-        persistedStream.setPartitionCount(stream.getPartitionCount());
-        persistedStream.setSystem(storageSystem);
-        persistedStream.setKeySerdeFactory(stream.getKeySerdeFactory().getName());
-        persistedStream.setValueSerdeFactory(stream.getValueSerdeFactory().getName());
-
-        persistedStream.save();
-
-        storageSystem.addStream(persistedStream);
-        storageSystem.update();
-      }
-
-      // TODO: Do we need to check whether stream in the persistent store has same properties as current stream?
+      blockingStub.registerStream(PBStream.newBuilder()
+          .setIdentifier(stream.getName())
+          .setSystem(stream.getSystem().getName())
+          .setKeySerdeFactory(stream.getValueSerdeFactory().getName())
+          .setValueSerdeFactory(stream.getValueSerdeFactory().getName())
+          .setPartitionCount(stream.getPartitionCount()).build());
+      // Current implementation does not validate streams stored in the server matches with the streams used in the topology
       // When we do it at the manager, manager can take care of everything.
     }
   }
@@ -264,9 +243,15 @@ public class PersistentSamzaTopology extends VisualizableTopology {
    *     consumed messages. May be we should start scheduling at sinks.
    */
 
-  public static class OperatorVisitor implements Visitor {
+  public class PBTopologyBuilderVisitor implements Visitor {
+    private final PBTopology.Builder builder;
+    private final Map<String, Boolean> vistorState;
     private Node root;
 
+    PBTopologyBuilderVisitor(PBTopology.Builder builder, Map<String, Boolean> vistorState) {
+      this.builder = builder;
+      this.vistorState = vistorState;
+    }
 
     Node visitRoot(Node n) {
       root = n;
@@ -280,11 +265,40 @@ public class PersistentSamzaTopology extends VisualizableTopology {
         case OPERATOR:
           if (!isSinkOrIntermediateStream(parent)) {
             String errMessage = String.format("Parent of an operator must be a sink or an intermediate stream. " +
-                    "But found a node %s of type %s", parent.getId(), parent.getType());
+                "But found a node %s of type %s", parent.getId(), parent.getType());
             logger.error(errMessage);
             throw new IllegalStateException(errMessage);
           }
 
+          if (!vistorState.containsKey(n.getId())) {
+            KafkaTopic outputTopic = (KafkaTopic) parent.getValue();
+
+            PBJob.Builder jobBuilder = PBJob.newBuilder()
+                .setTopology(name)
+                .setOperator(ByteString.copyFrom(SerializationUtils.serialize((Operator) n.getValue())))
+                .addOutputs(PBStreamReference.newBuilder()
+                    .setIdentifier(outputTopic.getName())
+                    .setSystem(outputTopic.getSystem().getName()).build());
+
+            for (Node input : n.getInputs()) {
+              if (!isSinkOrIntermediateStream(input)) {
+                String errMessage = String.format("Input of an operator must be a sink or an intermediate stream. " +
+                    "But found a node %s of type %s", parent.getId(), parent.getType());
+                logger.error(errMessage);
+                throw new IllegalStateException(errMessage);
+              }
+
+              KafkaTopic inputTopic = (KafkaTopic) parent.getValue();
+              jobBuilder.addInputs(PBStreamReference.newBuilder()
+                  .setIdentifier(inputTopic.getName())
+                  .setSystem(inputTopic.getSystem().getName()).build());
+            }
+
+            builder.addJobs(jobBuilder.build());
+            vistorState.put(n.getId(), true);
+          }
+
+          // TODO: Do we need to handle revisits? Typical topology cannot have revisits.
           break;
         default:
           if (logger.isDebugEnabled()) {
@@ -297,14 +311,8 @@ public class PersistentSamzaTopology extends VisualizableTopology {
     }
 
     private boolean isSinkOrIntermediateStream(Node n) {
-      return  n.getType() == Node.Type.SINK ||
+      return n.getType() == Node.Type.SINK ||
           n.getType() == Node.Type.INTERMEDIATE_STREAM;
     }
-
-    private void deployAndPersistOperator(Node n, Node parent) {
-
-    }
   }
-
-
 }

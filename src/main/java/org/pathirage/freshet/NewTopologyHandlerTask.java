@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pathirage.freshet.api;
+package org.pathirage.freshet;
 
-import org.apache.samza.serializers.SerdeFactory;
-import org.apache.samza.task.StreamTask;
+public class NewTopologyHandlerTask implements Runnable {
+  private final String topologyName;
 
-import java.io.Serializable;
+  NewTopologyHandlerTask(String topologyName) {
+    this.topologyName = topologyName;
+  }
 
-public interface Operator extends StreamTask, Serializable{
-  Class<? extends SerdeFactory> getResultKeySerdeFactory();
-  Class<? extends SerdeFactory> getResultValueSerdeFactory();
+  @Override
+  public void run() {
+
+  }
 }

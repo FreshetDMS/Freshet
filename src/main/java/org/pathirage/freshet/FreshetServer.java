@@ -28,13 +28,20 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.*;
 
 public class FreshetServer {
   private final Logger logger = LoggerFactory.getLogger(FreshetServer.class);
 
   private Server server;
+  private final ExecutorService newTopologyHandler = Executors.newSingleThreadExecutor();
+  private final ScheduledExecutorService topologyMonitor = Executors.newSingleThreadScheduledExecutor();
 
   private void start() throws IOException {
+    setupEBean();
+
+    // TODO: Setup the periodic task that monitor topologies
+
     int port = 50050;
 
     server = ServerBuilder.forPort(port)
@@ -45,6 +52,14 @@ public class FreshetServer {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
       public void run() {
+        System.out.println("*** shutting down topology handler");
+        try {
+          newTopologyHandler.awaitTermination(30, TimeUnit.SECONDS);
+          newTopologyHandler.shutdownNow();
+        } catch (InterruptedException e) {
+          System.out.println("*** timeout while waiting for new topology handler to finish.");
+        }
+        System.out.println("*** new topology handler shut down");
         System.err.println("*** shutting down gRPC server since JVM is shutting down");
         FreshetServer.this.stop();
         System.err.println("*** server shut down");
@@ -64,15 +79,24 @@ public class FreshetServer {
     }
   }
 
+  private void setupEBean() {
+    // TODO: Implement
+  }
+
   public static void main(String[] args) throws IOException, InterruptedException {
     final FreshetServer freshetServer = new FreshetServer();
     freshetServer.start();
     freshetServer.blockUntilShutdown();
   }
 
-  static class FreshetImpl extends FreshetGrpc.FreshetImplBase {
+  class FreshetImpl extends FreshetGrpc.FreshetImplBase {
     @Override
     public void submitTopology(PBTopology request, StreamObserver<TopologySubmissionResponse> responseObserver) {
+      if (PersistenceUtils.isTopologyExists(request.getName())) {
+        responseObserver.onError(Status.INTERNAL.withDescription("Topology with name '" + request.getName() + "' already exists in the system").asRuntimeException());
+        return;
+      }
+
       Ebean.beginTransaction();
 
       Topology topology = new Topology();
@@ -113,7 +137,7 @@ public class FreshetServer {
           job.setStatus(org.pathirage.freshet.domain.Status.NEW);
           job.save();
 
-          for(Map.Entry<String, String> prop : request.getPropertiesMap().entrySet()) {
+          for (Map.Entry<String, String> prop : request.getPropertiesMap().entrySet()) {
             JobProperty jobProperty = new JobProperty(prop.getKey(), prop.getValue(), job);
             jobProperty.save();
             job.addProperty(jobProperty);
@@ -151,6 +175,8 @@ public class FreshetServer {
         topology.update();
         Ebean.commitTransaction();
 
+        newTopologyHandler.submit(new NewTopologyHandlerTask(request.getName()));
+
         responseObserver.onNext(TopologySubmissionResponse.newBuilder()
             .setId(topology.getId())
             .setName(topology.getName())
@@ -170,6 +196,20 @@ public class FreshetServer {
 
     @Override
     public void registerSystem(PBSystem request, StreamObserver<SystemRegistrationResponse> responseObserver) {
+      if (PersistenceUtils.isSystemExists(request.getIdentifier())) {
+        StorageSystem storageSystem;
+        try {
+          storageSystem = PersistenceUtils.findSystemByName(request.getIdentifier());
+          responseObserver.onNext(SystemRegistrationResponse.newBuilder()
+              .setId(storageSystem.getId())
+              .setIdentifier(storageSystem.getIdentifier()).build());
+          responseObserver.onCompleted();
+        } catch (PersistenceUtils.EntityNotFoundException e) {
+          responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+
+        return;
+      }
       Ebean.beginTransaction();
 
       StorageSystem storageSystem = new StorageSystem();
@@ -198,6 +238,21 @@ public class FreshetServer {
 
     @Override
     public void registerStream(PBStream request, StreamObserver<StreamRegistrationResponse> responseObserver) {
+
+      if (PersistenceUtils.isStreamExists(request.getIdentifier(), request.getSystem())) {
+        try {
+          Stream stream = PersistenceUtils.findStreamByName(request.getIdentifier(), request.getSystem());
+          responseObserver.onNext(StreamRegistrationResponse.newBuilder()
+              .setId(stream.getId())
+              .setIdentifier(stream.getIdentifier()).build());
+          responseObserver.onCompleted();
+        } catch (PersistenceUtils.EntityNotFoundException e) {
+          responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+
+        return;
+      }
+
       Ebean.beginTransaction();
 
       try {

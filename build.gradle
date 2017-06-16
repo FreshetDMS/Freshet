@@ -73,6 +73,7 @@ dependencies {
   compile "io.ebean:ebean-querybean:$ebeanVersion"
   compile "io.ebean:ebean:$ebeanVersion"
   compile "org.hsqldb:hsqldb:$hsqldbVersion"
+  compile "org.apache.commons:commons-lang3:$commonslangVersion"
 //  compile "com.sparkjava:spark-core:$sparkJavaVersion"
 //  compile "com.google.code.gson:gson:$gsonVersion"
   compile "mysql:mysql-connector-java:$mysqlVersion"

@@ -29,8 +29,8 @@ import java.util.Map;
 public abstract class VisualizableTopology extends Topology {
 
 
-  protected VisualizableTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass) {
-    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
+  protected VisualizableTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass, String host, int port) {
+    super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass, host, port);
   }
 
   @Override

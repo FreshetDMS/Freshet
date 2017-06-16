@@ -32,6 +32,8 @@ public class TopologyBuilder {
   private final List<String> sinks = new ArrayList<>();
   private final Class<? extends StreamJobFactory> jobFactoryClass;
   private System defaultSystem;
+  private String host;
+  private int port;
 
   public TopologyBuilder(Class<? extends StreamJobFactory> jobFactoryClass) {
     this.jobFactoryClass = jobFactoryClass;
@@ -39,6 +41,16 @@ public class TopologyBuilder {
 
   public TopologyBuilder setName(String name) {
     this.name = name;
+    return this;
+  }
+
+  public TopologyBuilder setFreshetServerHost(String host) {
+    this.host = host;
+    return this;
+  }
+
+  public TopologyBuilder setFreshetServerPort(int port) {
+    this.port = port;
     return this;
   }
 
@@ -103,6 +115,6 @@ public class TopologyBuilder {
       throw new IllegalStateException("Default system is not set.");
     }
 
-    return new PersistentSamzaTopology(name, nodes, sources, sinks, defaultSystem, jobFactoryClass);
+    return new SamzaTopology(name, nodes, sources, sinks, defaultSystem, jobFactoryClass, host, port);
   }
 }

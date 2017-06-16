@@ -26,6 +26,12 @@ public class PersistenceUtils {
     return Ebean.find(Topology.class).findList();
   }
 
+  public static boolean isTopologyExists(String name) {
+    return Ebean.find(Topology.class)
+        .where().eq("name", name)
+        .findOneOrEmpty().isPresent();
+  }
+
   public static Topology findTopologyByName(String name) throws EntityNotFoundException {
     Optional<Topology> topologyOptional = Ebean.find(Topology.class)
         .where().eq("name", name)
