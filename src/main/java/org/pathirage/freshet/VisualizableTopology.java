@@ -15,7 +15,6 @@
  */
 package org.pathirage.freshet;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.samza.job.StreamJobFactory;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.stream.file.FileSinkImages;
@@ -29,7 +28,7 @@ import java.util.Map;
 public abstract class VisualizableTopology extends Topology {
 
 
-  protected VisualizableTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass, String host, int port) {
+  VisualizableTopology(String name, Map<String, Node> nodes, List<String> sources, List<String> sinks, System defaultSystem, Class<? extends StreamJobFactory> jobFactoryClass, String host, int port) {
     super(name, nodes, sources, sinks, defaultSystem, jobFactoryClass, host, port);
   }
 
@@ -42,7 +41,6 @@ public abstract class VisualizableTopology extends Topology {
       v.visitRoot(n);
 
       FileSinkImages pic = new FileSinkImages(FileSinkImages.OutputType.PNG, FileSinkImages.Resolutions.TwoK);
-//      pic.setRenderer(FileSinkImages.RendererType.SCALA);
       pic.setLayoutPolicy(FileSinkImages.LayoutPolicy.COMPUTED_FULLY_AT_NEW_IMAGE);
       try {
         pic.writeAll(v.getGraph(), outputPath);
@@ -57,26 +55,12 @@ public abstract class VisualizableTopology extends Topology {
     private Node root;
     private final DefaultGraph g = new DefaultGraph("job-topology");
 
-    public TopologyVisualizer() {
+    TopologyVisualizer() {
       g.addAttribute("ui.quality");
       g.addAttribute("ui.antialias");
     }
 
-    private String getFileWithUtil(String fileName) {
-
-      String result = "";
-
-      ClassLoader classLoader = getClass().getClassLoader();
-      try {
-        result = IOUtils.toString(classLoader.getResourceAsStream(fileName));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
-      return result;
-    }
-
-    public Node visitRoot(Node n) {
+    Node visitRoot(Node n) {
       root = n;
       visit(n, 0, null);
       return root;
@@ -103,7 +87,7 @@ public abstract class VisualizableTopology extends Topology {
       }
     }
 
-    public DefaultGraph getGraph() {
+    DefaultGraph getGraph() {
       return g;
     }
   }
