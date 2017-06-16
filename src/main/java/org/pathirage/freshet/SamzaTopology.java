@@ -23,10 +23,6 @@ import org.apache.samza.job.StreamJobFactory;
 import org.pathirage.freshet.api.Operator;
 import org.pathirage.freshet.api.System;
 import org.pathirage.freshet.api.Visitor;
-import org.pathirage.freshet.domain.PersistenceUtils;
-import org.pathirage.freshet.domain.StorageSystem;
-import org.pathirage.freshet.domain.StorageSystemProperty;
-import org.pathirage.freshet.domain.Stream;
 import org.pathirage.freshet.grpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +89,7 @@ public class SamzaTopology extends VisualizableTopology {
       PBTopologyBuilderVisitor v = new PBTopologyBuilderVisitor(builder, vistorState);
       v.visitRoot(n);
     }
-
+    // Job deployment is delegated to back-end
     blockingStub.submitTopology(builder.build());
   }
 
@@ -232,16 +228,6 @@ public class SamzaTopology extends VisualizableTopology {
       // When we do it at the manager, manager can take care of everything.
     }
   }
-
-  /*
-   * We can encapsulate most of the scheduling logic in the visitor. But we have to make sure following constraints
-   * are met:
-   *   - Sinks, and sources should be created before scheduling any jobs
-   *   - Job output streams and input streams should be created before scheduling of any jobs
-   *   - Upstream jobs must be scheduled first. But this has a caveat. When upstream job start processing before
-   *     downstream jobs, failure of downstream job scheduling may cause message loss due to upstream jobs committing
-   *     consumed messages. May be we should start scheduling at sinks.
-   */
 
   public class PBTopologyBuilderVisitor implements Visitor {
     private final PBTopology.Builder builder;
