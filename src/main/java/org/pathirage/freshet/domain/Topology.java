@@ -15,8 +15,11 @@
  */
 package org.pathirage.freshet.domain;
 
+import jdk.nashorn.internal.scripts.JO;
+
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -85,6 +88,21 @@ public class Topology extends BaseModel {
 
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  public List<Job> getJobsWritingToSinks() {
+    List<Job> result = new ArrayList<>();
+    for (Job job : jobs) {
+      if (areAllJobOutputsSinks(job.getOutputs())) {
+        result.add(job);
+      }
+    }
+
+    return result;
+  }
+
+  public List<Job> getPublishers(List<Stream> streams) {
+    return Collections.emptyList();
   }
 
   /**

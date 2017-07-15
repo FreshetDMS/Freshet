@@ -35,7 +35,7 @@ public class FreshetServer {
 
   private Server server;
   private final ExecutorService newTopologyHandler = Executors.newSingleThreadExecutor();
-  private final ScheduledExecutorService topologyMonitor = Executors.newSingleThreadScheduledExecutor();
+//  private final ScheduledExecutorService topologyMonitor = Executors.newSingleThreadScheduledExecutor();
 
   private void start() throws IOException {
     setupEBean();

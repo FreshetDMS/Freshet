@@ -17,6 +17,7 @@ package org.pathirage.freshet;
 
 import org.apache.samza.config.Config;
 import org.apache.samza.system.IncomingMessageEnvelope;
+import org.apache.samza.system.OutgoingMessageEnvelope;
 import org.apache.samza.task.*;
 
 
@@ -28,7 +29,7 @@ public class FreshetStreamTaskWrapper implements StreamTask, InitableTask, Windo
 
   @Override
   public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) throws Exception {
-
+    // TODO: we need to wrap the message collector to send message to correct stream. We can ignore system until we find a better way
   }
 
   @Override

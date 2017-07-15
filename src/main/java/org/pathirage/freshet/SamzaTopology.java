@@ -30,8 +30,9 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 public class SamzaTopology extends VisualizableTopology {
-
   private static Logger logger = LoggerFactory.getLogger(SamzaTopology.class);
+
+  private static final String SYS_PROP_JOB_PACKAGE = "freshet.job.package.path";
 
   private final ManagedChannel channel;
   private final FreshetGrpc.FreshetBlockingStub blockingStub;
@@ -65,6 +66,9 @@ public class SamzaTopology extends VisualizableTopology {
 
     PBTopology.Builder builder = PBTopology.newBuilder().setName(name);
 
+    // Set topology properties. Currently only job package property is supported.
+    builder.putProperties(SYS_PROP_JOB_PACKAGE, java.lang.System.getProperty(SYS_PROP_JOB_PACKAGE));
+
     for (String sink : sinks) {
       KafkaTopic topic = (KafkaTopic) nodes.get(sink).getValue();
       builder.addOutputs(PBStreamReference.newBuilder()
@@ -81,7 +85,6 @@ public class SamzaTopology extends VisualizableTopology {
           .build());
     }
 
-    // TODO: Add support for topology properties
     Map<String, Boolean> vistorState = new HashMap<>();
 
     for (String sink : sinks) {

@@ -39,11 +39,11 @@ public class Job extends BaseModel {
   private List<Stream> outputs = new ArrayList<>();
 
   @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name="metrics_stream", unique= true, nullable=true, insertable=true, updatable=true)
+  @JoinColumn(name="metrics_stream", unique= true)
   private Stream metrics;
 
   @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name="coordinator_stream", unique= true, nullable=true, insertable=true, updatable=true)
+  @JoinColumn(name="coordinator_stream", unique= true)
   private Stream coordinator;
 
   @ManyToMany
